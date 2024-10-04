@@ -1,0 +1,37 @@
+const express = require('express');
+const bodyParser = require('body-parser');
+const { SVM } = require('ml-svm');
+const joblib = require('joblib');
+
+const app = express();
+app.use(bodyParser.json());
+
+// Load the saved model and scaler
+const model = joblib.load('model.pkl');
+const scaler = joblib.load('scaler.pkl');
+
+app.post('/predict', (req, res) => {
+  const features = req.body;
+
+  // Convert features to array and scale them
+  const inputArray = [
+    features.pregnancies,
+    features.glucose,
+    features.bloodPressure,
+    features.skinThickness,
+    features.insulin,
+    features.bmi,
+    features.diabetesPedigreeFunction,
+    features.age,
+  ];
+
+  const scaledInput = scaler.transform([inputArray]);
+  const prediction = model.predict(scaledInput);
+
+  res.json({ prediction: prediction[0] });
+});
+
+const port = 3000;
+app.listen(port, () => {
+  console.log(`Server running on port ${port}`);
+});
